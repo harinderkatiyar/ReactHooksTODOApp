@@ -1,8 +1,20 @@
-import React from 'react';
+import React,{useEffect} from 'react';
 import myTodo from '../images/to-do-list.png';
+
+//To get the data from LS
+const getLocalItems=()=>{
+    let list = localStorage.getItem('lists');
+    console.log("my ls lsit ",list);
+    if(list){
+        return JSON.parse(localStorage.getItem('lists'));
+    }else{
+        return [];
+    }
+}
+
 export const Todo = () => {
     const [inputData, setinputData] = React.useState('');
-    const [state, setstate] = React.useState([]);
+    const [state, setstate] = React.useState(getLocalItems());
     const [showBtn, setshowBtn] = React.useState(false);
     //For Remove add data
     const addItem = () => {
@@ -25,6 +37,10 @@ export const Todo = () => {
         setstate([]);
         setshowBtn(false);
     }
+
+    useEffect(()=>{
+     localStorage.setItem('lists',JSON.stringify(state))
+    },[state])
     return (
         <div>
             <figure>
