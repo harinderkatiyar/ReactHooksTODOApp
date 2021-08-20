@@ -1,46 +1,72 @@
-import React,{useEffect} from 'react';
+import React, { useEffect, useState } from 'react';
 import myTodo from '../images/to-do-list.png';
 
 //To get the data from LS
-const getLocalItems=()=>{
+const getLocalItems = () => {
     let list = localStorage.getItem('lists');
-    console.log("my ls lsit ",list);
-    if(list){
+    if (list) {
         return JSON.parse(localStorage.getItem('lists'));
-    }else{
+    } else {
         return [];
     }
 }
 
 export const Todo = () => {
-    const [inputData, setinputData] = React.useState('');
-    const [state, setstate] = React.useState(getLocalItems());
-    const [showBtn, setshowBtn] = React.useState(false);
+    const [inputData, setinputData] = useState('');
+    const [items, setItems] = useState(getLocalItems());
+    const [showBtn, setshowBtn] = useState(false);
+    const [toggleSubmit, settoggleSubmit] = useState(true);
+    const [isEditItem, setisEditItem] = useState(null)
     //For Remove add data
     const addItem = () => {
-        setstate(inputData);
-        if (inputData) {
-            setstate([...state, inputData]);
+        setItems(inputData);
+        if (!inputData) {
+            alert("Please Fill the data");
+        } else if (inputData && !toggleSubmit) {
+            setItems(items.map((ele) => {
+                if (ele.id === isEditItem) {
+                    return { ...ele, name: inputData }
+                }
+                return ele
+            }))
+            setinputData('');
+            settoggleSubmit(true);
+            setisEditItem(null);
+
+        }
+
+        else {
+            const allInputData = { id: new Date().getTime().toString(), name: inputData }
+            setItems([...items, allInputData]);
             setinputData('');
             setshowBtn(true);
         }
     }
     //For Remove single data
     const deleteItem = (id) => {
-        const updatedItems = state.filter((ele, index) => {
-            return index !== id
+        const updatedItems = items.filter((ele) => {
+            return ele.id !== id
         })
-        setstate(updatedItems)
+        setItems(updatedItems)
     }
     //For Remove all Data
     const removeAll = () => {
-        setstate([]);
+        setItems([]);
         setshowBtn(false);
     }
+    //For edit  Data
+    const editItem = (id) => {
+        let newEditItem = items.find((ele) => {
+            return ele.id === id
+        })
+        setinputData(newEditItem.name);
+        settoggleSubmit(false);
+        setisEditItem(id);
+    }
 
-    useEffect(()=>{
-     localStorage.setItem('lists',JSON.stringify(state))
-    },[state])
+    useEffect(() => {
+        localStorage.setItem('lists', JSON.stringify(items))
+    }, [items])
     return (
         <div>
             <figure>
@@ -49,16 +75,14 @@ export const Todo = () => {
             </figure>
             <div>
                 <input className="text" value={inputData} onChange={(e) => setinputData(e.target.value)} placeholder="✍🏽 Add Items... " />
-                <i className="fas fa-plus" onClick={addItem} title="Add Item"></i>
+                {toggleSubmit ? <i className="fas fa-plus" onClick={addItem} title="Add Item"></i> : <i className="fas fa-save add-btn" onClick={addItem} title="Edit Items"></i>}
             </div>
             {
-
-                state.map((ele, index) => {
+                items.map((ele) => {
                     return (
-                        <div className="eachItem" key={index}>
-                            <h2>{ele} <i className="fas fa-trash-alt" onClick={() => deleteItem(index)} title="Delete Items"></i></h2>
-                        </div>
-                    )
+                        <div className="eachItem" key={ele.id}>
+                            <h2>{ele.name}           <i className="fas fa-edit add-btn" onClick={() => editItem(ele.id)} title="Edit Item"></i> <i className="fas fa-trash-alt add-btn" onClick={() => deleteItem(ele.id)} title="Delete Items"></i></h2>
+                        </div>)
                 })
             }
             <br />
